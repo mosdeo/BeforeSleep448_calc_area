@@ -62,8 +62,6 @@ cv.waitKey(1)
 # 等比例縮放，把面積變成1:1
 # =====================================
 
-ratio = female_area/male_area
-
 # 找到水平縮放起終點
 start, end = 0, 0
 
@@ -75,13 +73,34 @@ for i, v in enumerate(female_mask_project_to_x):
 
 for i, v in enumerate(female_mask_project_to_x[::-1]):
     if v != 0:
-        end = i
+        end = -i
         break
 
+# 取出ROI
+ROI_female_mask = female_mask[:,start:end]
+cv.imshow("ROI_female_mask", ROI_female_mask)
+
+# 展示分割線
 female_mask[:,start] = 255
-female_mask[:,-end] = 255
+female_mask[:,end] = 255
 cv.imshow("female_mask", female_mask)
-cv.imshow("female_mask cut", female_mask[:,start:-end])
+
+# 按比例縮放ROI，使女性面積與男性相等
+ROI_female_mask = cv.resize(ROI_female_mask, None, None, fx=male_area/female_area, fy=1)
+cv.imshow("new ROI_female_mask", ROI_female_mask)
+
+# 把平衡以後的ROI放回原mask，起點要相等
+female_mask[:,:] = 0 #mask清除
+female_mask[:,start:start+ROI_female_mask.shape[1]] = ROI_female_mask
+
+# 計算面積
+male_area   = np.count_nonzero(male_mask)
+female_area = np.count_nonzero(female_mask)
+
+# 產生示意圖
+male   = cv.bitwise_and(img, img, mask=male_mask)
+female = cv.bitwise_and(img, img, mask=female_mask)
+blend_image = cv.addWeighted(male+female, 0.8, img, 0.2, 1)
+
+cv.imshow("new blend_image, area= {} | {}".format(male_area, female_area), blend_image)
 cv.waitKey(0)
-
-
