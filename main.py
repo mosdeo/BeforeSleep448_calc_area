@@ -25,35 +25,41 @@ def color_mask(img, bgr_color):
         np.where(bgr_color[1]+err > g, 1, 0) & np.where(bgr_color[1]-err < g, 1, 0) &\
         np.where(bgr_color[2]+err > r, 1, 0) & np.where(bgr_color[2]-err < r, 1, 0)
 
-male = color_mask(img, male_color) | color_mask(img, male_gray)
-male = np.where(male==1, 255, 0).astype(np.uint8)
+male_mask = color_mask(img, male_color) | color_mask(img, male_gray)
+male_mask = np.where(male_mask==1, 255, 0).astype(np.uint8)
 
-female = color_mask(img, female_color) | color_mask(img, female_gray)
-female = np.where(female==1, 255, 0).astype(np.uint8)
+female_mask = color_mask(img, female_color) | color_mask(img, female_gray)
+female_mask = np.where(female_mask==1, 255, 0).astype(np.uint8)
 
 # 去除小面積獨立塊
 k_size  = np.array([37, 37])
 op = cv.MORPH_HITMISS
 kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, k_size)
-male   = cv.morphologyEx(  male, op, kernel)
-female = cv.morphologyEx(female, op, kernel)
+male_mask   = cv.morphologyEx(  male_mask, op, kernel)
+female_mask = cv.morphologyEx(female_mask, op, kernel)
 
 # 把少掉的邊緣長回來
 k_size  = np.array([5, 5])
 op = cv.MORPH_DILATE
 kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, k_size)
 for i in range(10):
-    male   = cv.morphologyEx(  male, op, kernel)
-    female = cv.morphologyEx(female, op, kernel)
+    male_mask   = cv.morphologyEx(  male_mask, op, kernel)
+    female_mask = cv.morphologyEx(female_mask, op, kernel)
 
 # 計算面積
-male_area   = np.count_nonzero(male)
-female_area = np.count_nonzero(female)
+male_area   = np.count_nonzero(male_mask)
+female_area = np.count_nonzero(female_mask)
 
 # 產生示意圖
-male   = cv.bitwise_and(img, img, mask=male)
-female = cv.bitwise_and(img, img, mask=female)
+male   = cv.bitwise_and(img, img, mask=male_mask)
+female = cv.bitwise_and(img, img, mask=female_mask)
 blend_image = cv.addWeighted(male+female, 0.8, img, 0.2, 1)
 
 cv.imshow("blend_image, area= {} | {}".format(male_area, female_area), blend_image)
 cv.waitKey(0)
+
+# =====================================
+# 等比例縮放，把面積變成1:1
+# =====================================
+
+ratio = female_area/male_area
