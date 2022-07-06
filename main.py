@@ -53,7 +53,7 @@ female_area = np.count_nonzero(female)
 # 產生示意圖
 male   = cv.bitwise_and(img, img, mask=male)
 female = cv.bitwise_and(img, img, mask=female)
-blend_image = cv.addWeighted(male+female, 0.7, img, 0.3, 1)
+blend_image = cv.addWeighted(male+female, 0.8, img, 0.2, 1)
 
 cv.imshow("blend_image, area= {} | {}".format(male_area, female_area), blend_image)
 cv.waitKey(0)
