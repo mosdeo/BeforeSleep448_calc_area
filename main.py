@@ -56,10 +56,32 @@ female = cv.bitwise_and(img, img, mask=female_mask)
 blend_image = cv.addWeighted(male+female, 0.8, img, 0.2, 1)
 
 cv.imshow("blend_image, area= {} | {}".format(male_area, female_area), blend_image)
-cv.waitKey(0)
+cv.waitKey(1)
 
 # =====================================
 # 等比例縮放，把面積變成1:1
 # =====================================
 
 ratio = female_area/male_area
+
+# 找到水平縮放起終點
+start, end = 0, 0
+
+female_mask_project_to_x = np.sum(female_mask, axis=0)
+for i, v in enumerate(female_mask_project_to_x):
+    if v != 0:
+        start = i
+        break
+
+for i, v in enumerate(female_mask_project_to_x[::-1]):
+    if v != 0:
+        end = i
+        break
+
+female_mask[:,start] = 255
+female_mask[:,-end] = 255
+cv.imshow("female_mask", female_mask)
+cv.imshow("female_mask cut", female_mask[:,start:-end])
+cv.waitKey(0)
+
+
